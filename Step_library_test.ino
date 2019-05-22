@@ -51,10 +51,16 @@ void goToPoint(int x, int y)
   stepVetor(vetor_x, vetor_y);
 }
 
-void drawPoligon(int centerX, int centerY, int radius, int n_sides)
+void drawPoligon(int centerX, int centerY, int radius, int n_sides, float rotate_angle = 0, int sides_to_draw = 9999)
 {
-  float angle = ((n_sides-2)*PI)/n_sides;
-  int start_angle = angle;//angle/2;
+  //Essa função desenha os polígonos achando os vértices através de um centro e um raio.
+  //O ângulo calculado é o ângulo entre o ponto central e dois vértices adjacentes quaisquer em radianos.
+  float angle = (2*PI)/n_sides;
+  //3*PI/2 é 270°, e somar metade do ângulo do polinômio garante que um dos lados dele sempre esteja alinhado com o eixo x.
+  //Somar um ângulo escolhido pelo usuário permite que ele rotacione o polinômio conforme seja necessário.
+  float start_angle = 3*PI/2 + angle/2 + rotate_angle;
+  //Cálculo dos pontos iniciais. Eles são guardados em variáveis diferentes dos pontos subsequentes para permitir que o programa
+  //una o último vertice ao primeiro sem se preocupar com erros de ponto flutuantes.
   int init_x = centerX + cos(start_angle)*radius;
   int init_y = centerY + sin(start_angle)*radius;
   
@@ -63,20 +69,24 @@ void drawPoligon(int centerX, int centerY, int radius, int n_sides)
 
   Serial.print("Angle:");
   Serial.println(angle/(2*PI));
-  
+  Serial.println(sides_to_draw);
+  //Leva os eixos para o ponto inicial com a caneta levanta e em seguida a abaixa.
   raiseServo();
   stepVetor(init_x - posicao_atual_x, init_y - posicao_atual_y);
   lowerServo();
 
-  for (int i = 1; i < n_sides ; i++)
+  if(sides_to_draw > n_sides)
+    sides_to_draw = n_sides;
+
+  for (int i = 1; i < sides_to_draw ; i++)
   {
     next_x = centerX + cos(start_angle+angle*i)*radius;
     next_y = centerY + sin(start_angle+angle*i)*radius;
 
     stepVetor(next_x - posicao_atual_x, next_y - posicao_atual_y);
   }
-
-  stepVetor(init_x - posicao_atual_x, init_y - posicao_atual_y);
+  if(n_sides == sides_to_draw)
+    stepVetor(init_x - posicao_atual_x, init_y - posicao_atual_y);
 }
 
 //void drawCircle(int centerX, int centerY, int radius)
@@ -198,7 +208,7 @@ void loop()
  Serial.print("Teste");
 
   
-  drawPoligon(1000,1000,500,4);
+  drawPoligon(1000, 1000, 500, 4);
   /*for(int i = 3; i < 10; i++)
   {
     drawPoligon(0,0,500,i);
