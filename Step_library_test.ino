@@ -19,7 +19,7 @@ int posicao_atual_y = 0;
 void setup() 
 { 
  Serial.begin(9600);
- //Determina a velocidade inicial do motor \
+ //Determina a velocidade inicial do motor
  myStepper.setSpeed(60);
  myStepper2.setSpeed(60);
  s.attach(porta_servo);
@@ -51,36 +51,62 @@ void goToPoint(int x, int y)
   stepVetor(vetor_x, vetor_y);
 }
 
-
-
-void drawCircle(int centerX, int centerY, int radius)
+void drawPoligon(int centerX, int centerY, int radius, int n_sides)
 {
-  Serial.println("Start circle");
+  float angle = ((n_sides-2)*PI)/n_sides;
+  int start_angle = angle;//angle/2;
+  int init_x = centerX + cos(start_angle)*radius;
+  int init_y = centerY + sin(start_angle)*radius;
+  
+  int next_x = 0;
+  int next_y = 0;
+
+  Serial.print("Angle:");
+  Serial.println(angle/(2*PI));
+  
   raiseServo();
-  goToPoint(centerX/2+radius,centerY);
+  stepVetor(init_x - posicao_atual_x, init_y - posicao_atual_y);
   lowerServo();
-  for(float t = 0; t < PI; t += 0.05)
+
+  for (int i = 1; i < n_sides ; i++)
   {
-//    Serial.println("cos,center,current:");
-//    Serial.print(cos(t));
-//    Serial.print("///");
-//    Serial.print(centerX);
-//    Serial.print("///");
-//    Serial.println(posicao_atual_x);
-    
-//    Serial.println("sen,center,current:");
-//    Serial.print(sin(t));
-//    Serial.print("///");
-//    Serial.print(centerY);
-//    Serial.print("///");
-//    Serial.println(posicao_atual_y);
-    
-    stepVetor((centerX + radius*cos(t)-posicao_atual_x), (centerY + radius*sin(t)-posicao_atual_y));
-    //stepVetor((centerX + radius*cos(t)-posicao_atual_x), 0);
+    next_x = centerX + cos(start_angle+angle*i)*radius;
+    next_y = centerY + sin(start_angle+angle*i)*radius;
+
+    stepVetor(next_x - posicao_atual_x, next_y - posicao_atual_y);
   }
-  raiseServo();
-  Serial.println("End circle");
+
+  stepVetor(init_x - posicao_atual_x, init_y - posicao_atual_y);
 }
+
+//void drawCircle(int centerX, int centerY, int radius)
+//{
+//  Serial.println("Start circle");
+//  raiseServo();
+//  goToPoint(centerX/2+radius,centerY);
+//  lowerServo();
+//  for(float t = 0; t < PI; t += 0.05)
+//  {
+////    Serial.println("cos,center,current:");
+////    Serial.print(cos(t));
+////    Serial.print("///");
+////    Serial.print(centerX);
+////    Serial.print("///");
+////    Serial.println(posicao_atual_x);
+//    
+////    Serial.println("sen,center,current:");
+////    Serial.print(sin(t));
+////    Serial.print("///");
+////    Serial.print(centerY);
+////    Serial.print("///");
+////    Serial.println(posicao_atual_y);
+//    
+//    stepVetor((centerX + radius*cos(t)-posicao_atual_x), (centerY + radius*sin(t)-posicao_atual_y));
+//    //stepVetor((centerX + radius*cos(t)-posicao_atual_x), 0);
+//  }
+//  raiseServo();
+//  Serial.println("End circle");
+//}
 
 void testServo()
 {
@@ -127,7 +153,6 @@ void stepVetor(int x, int y)
   
   if(abs(x)>abs(y))
   {
-    
     temp_max = abs(x);
     temp_div = abs(x)/abs(y);
 
@@ -145,8 +170,9 @@ void stepVetor(int x, int y)
     secondary_stepper = &myStepper;
     main_stepper = &myStepper2;
     
-    negativeMain = negativeY;
     negativeSecondary = negativeX;
+    negativeMain = negativeY;
+
   }
 
   
@@ -158,7 +184,7 @@ void stepVetor(int x, int y)
     {
       continue;
     }
-    if(i%(temp_div)==0)
+    if(i%temp_div==0)
     {
       secondary_stepper->step(passo_min*negativeSecondary);
     }
@@ -171,7 +197,18 @@ void loop()
 { 
  Serial.print("Teste");
 
- drawCircle(0,0,1000);  
- //stepVetor(passos_para_volta_completa/2,passos_para_volta_completa);
+  
+  drawPoligon(1000,1000,500,4);
+  /*for(int i = 3; i < 10; i++)
+  {
+    drawPoligon(0,0,500,i);
+    delay(500);
+  }*/
+ //drawCircle(0,0,1000);  
+ //myStepper.step(passos_para_volta_completa);
+ //stepVetor(passos_para_volta_completa,0);
+ //stepVetor(0,passos_para_volta_completa);
+ //stepVetor(-passos_para_volta_completa,0);
+ //stepVetor(0,-passos_para_volta_completa);
  delay(10000);
 }
