@@ -28,7 +28,7 @@ void setup()
 
 void lowerServo()
 {
-  s.write(90);
+  s.write(180);
   /*for(int i = 0; i < 90; i++)
   {
     s.write(i);
@@ -51,7 +51,7 @@ void goToPoint(int x, int y)
   stepVetor(vetor_x, vetor_y);
 }
 
-void drawPoligon(int centerX, int centerY, int radius, int n_sides, float rotate_angle = 0, int sides_to_draw = 9999)
+void drawPoligonByRadius(int centerX, int centerY, int radius, int n_sides, float rotate_angle, int sides_to_draw)
 {
   //Essa função desenha os polígonos achando os vértices através de um centro e um raio.
   //O ângulo calculado é o ângulo entre o ponto central e dois vértices adjacentes quaisquer em radianos.
@@ -67,9 +67,6 @@ void drawPoligon(int centerX, int centerY, int radius, int n_sides, float rotate
   int next_x = 0;
   int next_y = 0;
 
-  Serial.print("Angle:");
-  Serial.println(angle/(2*PI));
-  Serial.println(sides_to_draw);
   //Leva os eixos para o ponto inicial com a caneta levanta e em seguida a abaixa.
   raiseServo();
   stepVetor(init_x - posicao_atual_x, init_y - posicao_atual_y);
@@ -78,7 +75,7 @@ void drawPoligon(int centerX, int centerY, int radius, int n_sides, float rotate
   if(sides_to_draw > n_sides)
     sides_to_draw = n_sides;
 
-  for (int i = 1; i < sides_to_draw ; i++)
+  for (int i = 1; i <= sides_to_draw ; i++)
   {
     next_x = centerX + cos(start_angle+angle*i)*radius;
     next_y = centerY + sin(start_angle+angle*i)*radius;
@@ -89,6 +86,12 @@ void drawPoligon(int centerX, int centerY, int radius, int n_sides, float rotate
     stepVetor(init_x - posicao_atual_x, init_y - posicao_atual_y);
 }
 
+void drawPoligonBySide(int centerX, int centerY, int side, int n_sides, float rotate_angle = 0, int sides_to_draw = 9999)
+//Calcula o raio do polígono baseado no tamanho do lado e chama a função de desenhar polígono
+{
+  float angle_center = (2*PI)/n_sides;
+  float angle_edge = angle_center;
+}
 //void drawCircle(int centerX, int centerY, int radius)
 //{
 //  Serial.println("Start circle");
@@ -208,7 +211,7 @@ void loop()
  Serial.print("Teste");
 
   
-  drawPoligon(1000, 1000, 500, 4);
+  drawPoligonByRadius(1000, 1000, passos_para_volta_completa, 4,0,2);
   /*for(int i = 3; i < 10; i++)
   {
     drawPoligon(0,0,500,i);
@@ -220,5 +223,5 @@ void loop()
  //stepVetor(0,passos_para_volta_completa);
  //stepVetor(-passos_para_volta_completa,0);
  //stepVetor(0,-passos_para_volta_completa);
- delay(10000);
+ delay(1000);
 }
