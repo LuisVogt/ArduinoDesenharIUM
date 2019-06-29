@@ -5,7 +5,7 @@ const int stepsPerRevolution = 500;
 const int passo_min = 1;
 const int passos_para_volta_completa = 2000;
 const int velocidade = 2000;
-const int number_of_sides_circle = 16;
+const int number_of_sides_circle = 50;
 //com essa configuração aproximadamente 2000 passos são necessários para uma volta completa
 
 //Inicializa a biblioteca utilizando as portas de 8 a 11 para
@@ -29,6 +29,7 @@ void setup()
 
 void lowerServo()
 {
+  return;
   s.write(180);
   /*for(int i = 0; i < 90; i++)
     {
@@ -38,6 +39,7 @@ void lowerServo()
 
 void raiseServo()
 {
+  return;
   s.write(0);
   /*  for(int i = 90; i >= 0; i--)
     {
@@ -61,7 +63,8 @@ void drawPolygonByRadius(int centerX, int centerY, int radius, int n_sides, floa
   //Somar um ângulo escolhido pelo usuário permite que ele rotacione o polinômio conforme seja necessário.
   float start_angle;
   if (onBase)
-    start_angle = (3 * PI / 2) + (angle / 2) + rotate_angle;
+    start_angle = (3 * PI / 2) + angle/2 + rotate_angle;
+    //start_angle = (3 * PI / 2) + (angle / 2) + rotate_angle;
   else
     start_angle = rotate_angle;
   //Cálculo dos pontos iniciais. Eles são guardados em variáveis diferentes dos pontos subsequentes para permitir que o programa
@@ -166,8 +169,15 @@ void testServo()
 
 void stepVetor(int x, int y)
 {
+  if(x == 58 || x == 60 || x == -1)
+    x++;
+  if(y == 58 || y == 60 || y == -1)
+    y++;  
   posicao_atual_x += x;
   posicao_atual_y += y;
+  Serial.println(posicao_atual_x);
+  Serial.println(posicao_atual_y);
+  return;
   int temp_max;
   int temp_div;
   Stepper* main_stepper;
@@ -216,7 +226,6 @@ void stepVetor(int x, int y)
 
     negativeSecondary = negativeX;
     negativeMain = negativeY;
-
   }
 
 
@@ -244,11 +253,13 @@ void serialEvent()
   int centerX = passos_para_volta_completa * 10;
   int centerY = passos_para_volta_completa * 10;
   int radius = passos_para_volta_completa * 5;
-
+  byte face = bufferSerial[0];
+  byte hair = bufferSerial[1];
   //avisa que começou a desenhar
-  Serial.write(byte(60));
+  Serial.println(60);
+  //Serial.println();
   
-  switch (bufferSerial[0])
+  switch (face)
   {
     case 1:
       drawHappyFace(centerX, centerY, radius);
@@ -271,57 +282,74 @@ void serialEvent()
     case 7:
       drawSickFace(centerX, centerY, radius);
       break;
-
+    case 8:
+      drawFace(0,0,1000);
+      break;
   }
-
-  if (index >= bufferSize)
-    return;
+  switch (hair)
+  {
+    case 1:
+      drawBasicHair(centerX, centerY, radius);
+      break;
+    case 2:
+      drawComplexHair(centerX, centerY, radius);
+      break;
+    default:
+    break;
+  }
 }
 
 void drawFace(int centerX, int centerY, int radius)
 {
+  //Nose
+  drawPolygonByRadius(centerX, centerY, radius/15, 3,PI/2,2,false);
   //Face
   drawPolygonByRadius(centerX, centerY, radius, number_of_sides_circle);
   int eyes = (radius / 5) * 2;
   //Right Eye
   drawPolygonByRadius(centerX + eyes, centerY + eyes, radius / 5, number_of_sides_circle);
-  drawPoint(centerX + eyes, centerY + eyes);
+  drawPolygonByRadius(centerX + eyes, centerY + eyes, radius / 20, number_of_sides_circle);
+  //drawPoint(centerX + eyes, centerY + eyes);
   //Left Eye
   drawPolygonByRadius(centerX - eyes, centerY + eyes, radius / 5, number_of_sides_circle);
-  drawPoint(centerX - eyes, centerY + eyes);
-  //Nose
-  drawPolygonByRadius(centerX, centerY, radius / 15, 3, 0, 2, true);
+  drawPolygonByRadius(centerX - eyes, centerY + eyes, radius / 20, number_of_sides_circle);
+  //drawPoint(centerX - eyes, centerY + eyes);
+
 }
 
 void drawAngryEyebrows(int centerX, int centerY, int radius)
 {
-  int eyes = (radius / 5) / 2;
-  drawLineByCoordinate(centerX - eyes - radius / 5, centerY + eyes + (radius / 5) * 2, centerX - eyes + radius / 5, centerY + eyes + radius / 5);
-  drawLineByCoordinate(centerX + eyes + radius / 5, centerY + eyes + radius / 5, centerX + eyes - radius / 5, centerY + eyes + (radius / 5) * 2);
+  int eyes = (radius / 5) * 2;
+  float modifierX = 0.3;
+  float modifierY = 1.1;
+  drawLineByCoordinate(centerX + (eyes + radius/5)*modifierX, centerY + (eyes + 2*radius/5)*modifierY, centerX + (eyes - radius/5)*modifierX, centerY + (eyes + radius/5));
+  drawLineByCoordinate(centerX - (eyes - radius/5)*modifierX, centerY + (eyes + radius/5), centerX - (eyes + radius/5)*modifierX, centerY + (eyes + 2*radius/5)*modifierY);
 }
 
 void drawApprehensiveEyebrows(int centerX, int centerY, int radius)
 {
-  int eyes = (radius / 5) / 2;
-  drawLineByCoordinate(centerX + eyes - radius / 5, centerY + eyes + (radius / 5) * 2, centerX + eyes + radius / 5, centerY + eyes + radius / 5);
-  drawLineByCoordinate(centerX - eyes + radius / 5, centerY + eyes + radius / 5, centerX - eyes - radius / 5, centerY + eyes + (radius / 5) * 2);
+  int eyes = (radius / 5) * 2;
+  float modifierX = 0.9;
+  float modifierY = 1;
+  drawLineByCoordinate(centerX + (eyes + radius/5)*modifierX, centerY + (eyes + radius/5), centerX + (eyes - radius/5)*modifierX, centerY + (eyes + 2*radius/5)*modifierY);
+  drawLineByCoordinate(centerX - (eyes - radius/5)*modifierX, centerY + (eyes + 2*radius/5)*modifierY, centerX - (eyes + radius/5)*modifierX, centerY + (eyes + radius/5));
 }
 
 void drawHappyMouth(int centerX, int centerY, int radius)
 {
-  drawPolygonByRadius(centerX, centerY + radius / 5, radius, number_of_sides_circle, (PI * 2) / 5, number_of_sides_circle / 5, false);
+  drawPolygonByRadius(centerX, centerY, 3*radius/5, number_of_sides_circle, 5*PI/4, number_of_sides_circle / 4, false);
 }
 
 void drawSadMouth(int centerX, int centerY, int radius)
 {
-  drawPolygonByRadius(centerX, centerY - (radius / 5) * 7, radius, number_of_sides_circle, PI + (PI * 2) / 5, number_of_sides_circle / 5, false);
+  drawPolygonByRadius(centerX, (centerY+radius)/3, 3*radius/5, number_of_sides_circle, PI/4, number_of_sides_circle / 4, false);
 }
 
 void drawSickMouth(int centerX, int centerY, int radius)
 {
-  drawPolygonByRadius(centerX, centerY - (radius / 5) * 7, radius, number_of_sides_circle, PI + (PI * 2) / 16, number_of_sides_circle / 8, false);
-  drawPolygonByRadius(centerX + (radius / 5) * 2.5, centerY - (radius / 5) * (12 / 7), (radius / 5) * 2, number_of_sides_circle,   PI / 4, number_of_sides_circle / 2, false);
-  drawPolygonByRadius(centerX - (radius / 5) * 2.5, centerY - (radius / 5) * (12 / 7), (radius / 5) * 2, number_of_sides_circle, 3 * PI / 4, number_of_sides_circle / 2, false);
+  drawPolygonByRadius(centerX, (centerY+radius)/2.25, 2*radius/5, number_of_sides_circle, PI/4, number_of_sides_circle / 4, false);
+  drawPolygonByRadius(centerX + (radius / 5)*3.4, centerY - (radius / 5) * (2-0.25), (radius / 5) * 2, number_of_sides_circle,3*PI/4, number_of_sides_circle / 4, false);
+  drawPolygonByRadius(centerX - (radius / 5)*3.35, centerY - (radius / 5) *(2-0.25), (radius / 5) * 2, number_of_sides_circle,-PI/4, number_of_sides_circle / 4, false);
 }
 
 void drawSurprisedMouth(int centerX, int centerY, int radius)
@@ -380,9 +408,25 @@ void drawSickFace(int centerX, int centerY, int radius)
 
 void drawBasicHair(int centerX, int centerY, int radius)
 {
-  for (float i = PI / 4; i < PI * 3 / 4; i += PI / 16)
+  int x = 0;
+  int y = 0;
+  for(float i = 0; i <= PI+0.001; i+= PI /8)
   {
-    drawLineByAngle(centerX, centerY + radius, radius / 5, i);
+      x = centerX + cos(i) * radius/3;
+      y = centerY + radius + sin(i) * radius/4;
+      drawLineByCoordinate(centerX, centerY + radius, x, y);
+  }
+}
+
+void drawComplexHair(int centerX, int centerY, int radius)
+{
+  int x = 0;
+  int y = 0;
+  for(float i = PI / 4; i<= PI * 3/4; i+= PI /16)
+  {
+      x = centerX + cos(i) * radius;
+      y = centerY + sin(i) * radius;
+      drawPolygonByRadius(x, y, radius/10, number_of_sides_circle/2);
   }
 }
 
@@ -402,6 +446,7 @@ void loop()
   //stepVetor(0,-passos_para_volta_completa);
   
   //avisa que está disponível
-  Serial.write(byte(58));
+  Serial.println(58);
+  //Serial.println();
   delay(1000);
 }
