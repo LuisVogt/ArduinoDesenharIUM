@@ -3,9 +3,10 @@
 
 const int stepsPerRevolution = 500;
 const int passo_min = 1;
-const int passos_para_volta_completa = 2000;
+const int passos_para_volta_completa = 2048;
 const int velocidade = 2000;
-const int number_of_sides_circle = 50;
+const int number_of_sides_circle = 16;
+const int escala = 5;
 //com essa configuração aproximadamente 2000 passos são necessários para uma volta completa
 
 //Inicializa a biblioteca utilizando as portas de 8 a 11 para
@@ -17,6 +18,14 @@ int porta_servo = 2;
 int posicao_atual_x = 0;
 int posicao_atual_y = 0;
 
+int botao_ajuste = 3;
+int botao_troca = 4;
+
+bool eixo_x = true;
+bool calibrando = true;
+
+bool plotagem = true;
+
 void setup()
 {
   Serial.begin(9600);
@@ -25,12 +34,18 @@ void setup()
   myStepper2.setSpeed(60);
   s.attach(porta_servo);
   s.write(0);
+
+  bool eixo_x = true;
+  bool calibrando = true;
+
+  pinMode(botao_ajuste,INPUT_PULLUP);
+  pinMode(botao_troca,INPUT_PULLUP);
 }
 
 void lowerServo()
 {
-  return;
-  s.write(180);
+  if(!plotagem)
+    s.write(180);
   /*for(int i = 0; i < 90; i++)
     {
     s.write(i);
@@ -39,8 +54,8 @@ void lowerServo()
 
 void raiseServo()
 {
-  return;
-  s.write(0);
+  if(!plotagem)
+    s.write(0);
   /*  for(int i = 90; i >= 0; i--)
     {
     s.write(i);
@@ -95,7 +110,7 @@ void drawPolygonByRadius(int centerX, int centerY, int radius, int n_sides, floa
 }
 
 void drawPolygonBySide(int centerX, int centerY, int side, int n_sides, float rotate_angle = 0, int sides_to_draw = 9999, bool onBase = true)
-//Calcula o raio do polígono baseado no tamanho do lado e chama a função de desenhar polígono
+//Calcula o fraio do polígono baseado no tamanho do lado e chama a função de desenhar polígono
 {
   float angle_center = (2 * PI) / n_sides;
   int radius = (side / 2) / sin(angle_center / 2);
@@ -177,7 +192,8 @@ void stepVetor(int x, int y)
   posicao_atual_y += y;
   Serial.println(posicao_atual_x);
   Serial.println(posicao_atual_y);
-  return;
+  if(plotagem)
+    return;
   int temp_max;
   int temp_div;
   Stepper* main_stepper;
@@ -250,9 +266,11 @@ void serialEvent()
   int index = 0;
   int bufferSize = Serial.readBytes(bufferSerial, Serial.available());
 
-  int centerX = passos_para_volta_completa * 10;
-  int centerY = passos_para_volta_completa * 10;
-  int radius = passos_para_volta_completa * 5;
+  int centerX = passos_para_volta_completa * escala * 2;
+  int centerY = passos_para_volta_completa * escala * 2;
+  int radius = passos_para_volta_completa * escala;
+  if(bufferSerial[2] == 1)
+    plotagem = true;
   byte face = bufferSerial[0];
   byte hair = bufferSerial[1];
   //avisa que começou a desenhar
@@ -297,6 +315,7 @@ void serialEvent()
     default:
     break;
   }
+  plotagem = false;
 }
 
 void drawFace(int centerX, int centerY, int radius)
@@ -432,21 +451,31 @@ void drawComplexHair(int centerX, int centerY, int radius)
 
 void loop()
 {
-  //drawPolygonByRadius(1000, 1000, passos_para_volta_completa, 4, 0, 2);
-  /*for(int i = 3; i < 10; i++)
+  if(digitalRead(botao_ajuste) == LOW && calibrando)
+  {
+    //Serial.println("movendo");
+    if(eixo_x)
+      stepVetor(-passos_para_volta_completa,0);
+    else
+      stepVetor(0,-passos_para_volta_completa);
+  }
+  if(digitalRead(botao_troca) == LOW && calibrando)
+  {
+    //Serial.println("trocando");
+    if(eixo_x)
+      eixo_x = false;
+    else
     {
-    drawPolygon(0,0,500,i);
-    delay(500);
-    }*/
-  //drawCircle(0,0,1000);
-  //myStepper.step(passos_para_volta_completa);
-  //stepVetor(passos_para_volta_completa,0);
-  //stepVetor(0,passos_para_volta_completa);
-  //stepVetor(-passos_para_volta_completa,0);
-  //stepVetor(0,-passos_para_volta_completa);
-  
-  //avisa que está disponível
-  Serial.println(58);
+      posicao_atual_x = 0;
+      posicao_atual_y = 0;
+      calibrando = false;
+    }
+    delay(1000);
+  }
+  if(!calibrando)
+  {
+    //avisa que está disponível
+    Serial.println(58);
+  }
   //Serial.println();
-  delay(1000);
 }

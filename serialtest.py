@@ -21,6 +21,7 @@ cabelo = {
 def calculatePolygon(centerX, centerY, radius, number_sides):
     resultx = []
     resulty = []
+
     angle = (2*math.pi)/number_sides
     start_angle = (3 * math.pi / 2) + (angle / 2)
 
@@ -44,8 +45,11 @@ def calculatePolygon(centerX, centerY, radius, number_sides):
 def processInput(device):
     serialRead = device.readline()
     if serialRead != b'':
-        print (int(serialRead))
-        return int(serialRead)
+        try:
+            print (int(serialRead))
+            return int(serialRead)
+        except:
+            return -15
     return -1
 
 def generatePoints(_x,_y):
@@ -57,6 +61,17 @@ def generatePoints(_x,_y):
         print(n)
     return [_x,_y]
 
+def separatePoints(points, _servo):
+    resultado = []
+    antes = 0
+    ignorar = False
+    for i in servo:
+        if ignorar:
+            resultado.append([points[0][antes:i], points[1][antes:i]])
+        ignorar = not ignorar
+        antes = i
+    return resultado
+
 Arduino = serial.Serial("COM11")
 Arduino.timeout = 1
 
@@ -66,6 +81,7 @@ is_drawing = False
 is_x = True
 x = []
 y = []
+servo = []
 
 while not end:
     arduino_input = processInput(Arduino)
@@ -84,7 +100,7 @@ while not end:
             end = True
             break
         else:
-            temp = chr(faces["feliz"])+chr(cabelo['complexo'])
+            temp = chr(faces["feliz"])+chr(cabelo['complexo'])+chr(0)
             Arduino.write(bytearray(temp.encode('latin-1')))
 
 print("ending")
